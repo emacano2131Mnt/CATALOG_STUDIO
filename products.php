@@ -1,0 +1,8 @@
+<?php
+require_once __DIR__.'/config/db.php';$pageTitle='Productos';
+$products=$pdo->query("SELECT p.*,c.name catalog_name,cat.name category_name FROM products p JOIN catalogs c ON c.id=p.catalog_id LEFT JOIN categories cat ON cat.id=p.category_id ORDER BY p.created_at DESC")->fetchAll();
+require __DIR__.'/includes/header.php';?>
+<div class="page-heading"><div><span class="eyebrow">INVENTARIO</span><h1>Productos</h1><p>Consulta los productos registrados en todos tus catálogos.</p></div></div>
+<div class="toolbar"><div class="search-box"><span>⌕</span><input id="productSearch" type="search" placeholder="Buscar producto o catálogo..."></div><span class="muted"><?= count($products) ?> producto(s)</span></div>
+<div class="panel table-panel"><table><thead><tr><th>Producto</th><th>Catálogo</th><th>Categoría</th><th>Precio</th><th></th></tr></thead><tbody><?php foreach($products as $p): ?><tr class="product-row"><td><strong><?= htmlspecialchars($p['name']) ?></strong></td><td><?= htmlspecialchars($p['catalog_name']) ?></td><td><?= htmlspecialchars($p['category_name']?:'—') ?></td><td>$<?= number_format((float)$p['price'],0,',','.') ?></td><td><a class="text-link" href="catalog_view.php?id=<?= $p['catalog_id'] ?>">Abrir →</a></td></tr><?php endforeach; ?></tbody></table><?php if(!$products): ?><div class="empty-inline">Todavía no hay productos registrados.</div><?php endif; ?></div>
+<?php require __DIR__.'/includes/footer.php';?>

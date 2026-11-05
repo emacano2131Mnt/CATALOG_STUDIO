@@ -1,0 +1,2 @@
+<?php
+require_once __DIR__.'/config/db.php';if($_SERVER['REQUEST_METHOD']==='POST'){$id=(int)($_POST['id']??0);$catalogId=(int)($_POST['catalog_id']??0);$s=$pdo->prepare("DELETE FROM products WHERE id=?");$s->execute([$id]);header('Location: catalog_view.php?id='.$catalogId);exit;}header('Location: products.php');
