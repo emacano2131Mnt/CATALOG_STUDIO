@@ -24,6 +24,7 @@ require __DIR__ . '/includes/header.php';
 <section class="page-heading">
   <div class="page-heading-copy"><span class="eyebrow">DETALLE DEL CATÁLOGO</span><h1><?= h($catalog['name']) ?></h1><p><?= h($catalog['description'] ?: 'Administra los productos de este catálogo.') ?></p></div>
   <div class="heading-actions">
+    <a class="btn btn-light" href="catalog_designer.php?id=<?= $id ?>">✦ Personalizar diseño</a>
     <a class="btn btn-light" href="catalog_edit.php?id=<?= $id ?>">✎ Editar catálogo</a>
     <a class="btn btn-primary" href="product_create.php?catalog_id=<?= $id ?>">＋ Agregar producto</a>
   </div>

@@ -5,6 +5,6 @@
     </footer>
   </div>
 </div>
-<script src="assets/js/app.js?v=5" defer></script>
+<script src="assets/js/app.js?v=7" defer></script>
 </body>
 </html>

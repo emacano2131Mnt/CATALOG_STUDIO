@@ -39,6 +39,7 @@ require __DIR__ . '/includes/header.php';
           <div class="catalog-meta"><span>Creado</span><time datetime="<?= h(date('Y-m-d', strtotime($catalog['created_at']))) ?>"><?= h(date('d/m/Y', strtotime($catalog['created_at']))) ?></time></div>
           <div class="card-actions">
             <a class="btn btn-light" href="catalog_view.php?id=<?= (int)$catalog['id'] ?>">Ver catálogo</a>
+            <a class="icon-link" title="Personalizar diseño" aria-label="Personalizar diseño" href="catalog_designer.php?id=<?= (int)$catalog['id'] ?>">✦</a>
             <a class="icon-link" title="Ver PDF" aria-label="Ver PDF" href="export_pdf.php?id=<?= (int)$catalog['id'] ?>" target="_blank" rel="noopener">PDF</a>
             <a class="icon-link" title="Editar catálogo" aria-label="Editar catálogo" href="catalog_edit.php?id=<?= (int)$catalog['id'] ?>">✎</a>
             <form method="post" action="catalog_delete.php" onsubmit="return confirm('¿Eliminar este catálogo y sus productos? Esta acción no se puede deshacer.');">

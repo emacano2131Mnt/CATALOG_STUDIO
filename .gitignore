@@ -8,6 +8,8 @@ Thumbs.db
 .vscode/
 .idea/
 /uploads/*
+/storage/catalog_designs/catalog-*.php
+/storage/catalog_designs/catalog-*.lock
 !/uploads/.gitkeep
 !/uploads/.htaccess
 !/uploads/index.php

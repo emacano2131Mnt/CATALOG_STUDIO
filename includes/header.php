@@ -3,7 +3,7 @@ if (!isset($pageTitle)) {
     $pageTitle = 'Catalog Studio';
 }
 $current = basename($_SERVER['PHP_SELF'] ?? 'index.php');
-$catalogRoutes = ['catalogs.php', 'catalog_create.php', 'catalog_edit.php', 'catalog_view.php'];
+$catalogRoutes = ['catalogs.php', 'catalog_create.php', 'catalog_edit.php', 'catalog_view.php', 'catalog_designer.php'];
 $productRoutes = ['products.php', 'product_create.php', 'product_edit.php'];
 ?>
 <!doctype html>
@@ -13,7 +13,7 @@ $productRoutes = ['products.php', 'product_create.php', 'product_edit.php'];
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f7fb">
   <title><?= h($pageTitle) ?> | Catalog Studio</title>
-  <link rel="stylesheet" href="assets/css/style.css?v=5">
+  <link rel="stylesheet" href="assets/css/style.css?v=7">
 </head>
 <body>
 <div class="app-shell" id="appShell">
