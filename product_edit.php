@@ -73,18 +73,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($upload['error'] !== null) {
                 $errors[] = $upload['error'];
             } else {
-                $image = $upload['name'] ?? $product['image'];
                 try {
+                    $pdo->beginTransaction();
+                    $currentStatement = $pdo->prepare('SELECT image FROM products WHERE id = ? FOR UPDATE');
+                    $currentStatement->execute([$id]);
+                    $currentProduct = $currentStatement->fetch();
+                    if (!$currentProduct) {
+                        throw new RuntimeException('El producto dejó de existir durante la edición.');
+                    }
+
+                    $oldImage = $currentProduct['image'];
+                    $image = $upload['name'] ?? $oldImage;
                     $statement = $pdo->prepare('UPDATE products SET catalog_id = ?, category_id = ?, name = ?, description = ?, price = ?, image = ? WHERE id = ?');
                     $statement->execute([$catalogId, $categoryId, $name, $description, $price, $image, $id]);
-                    flash_set('success', 'Los cambios del producto se guardaron correctamente.');
-                    header('Location: catalog_view.php?id=' . $catalogId);
-                    exit;
-                } catch (PDOException $e) {
+                    $pdo->commit();
+                } catch (Throwable $e) {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
                     if ($upload['name'] !== null) {
                         @unlink(__DIR__ . '/uploads/' . $upload['name']);
                     }
                     $errors[] = 'No fue posible actualizar el producto. Verifica los datos e inténtalo de nuevo.';
+                }
+
+                if (!$errors) {
+                    $cleanupWarning = null;
+                    if ($upload['name'] !== null && $oldImage !== $upload['name']) {
+                        $cleanupWarning = delete_image_if_unreferenced($pdo, $oldImage);
+                    }
+                    if ($cleanupWarning !== null) {
+                        flash_set('warning', 'El producto se actualizó, pero ' . lcfirst($cleanupWarning));
+                    } else {
+                        flash_set('success', 'Los cambios del producto se guardaron correctamente.');
+                    }
+                    header('Location: catalog_view.php?id=' . $catalogId);
+                    exit;
                 }
             }
         }

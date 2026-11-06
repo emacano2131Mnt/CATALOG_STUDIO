@@ -94,7 +94,7 @@ function render_form_errors(array $errors): void
 
 function flash_set(string $type, string $message): void
 {
-    if (!in_array($type, ['success', 'error'], true)) {
+    if (!in_array($type, ['success', 'error', 'warning'], true)) {
         $type = 'error';
     }
     $_SESSION['flash_message'] = ['type' => $type, 'message' => $message];
@@ -104,7 +104,7 @@ function render_flash_message(): void
 {
     $flash = $_SESSION['flash_message'] ?? null;
     unset($_SESSION['flash_message']);
-    if (!is_array($flash) || !in_array($flash['type'] ?? null, ['success', 'error'], true) || !is_string($flash['message'] ?? null)) {
+    if (!is_array($flash) || !in_array($flash['type'] ?? null, ['success', 'error', 'warning'], true) || !is_string($flash['message'] ?? null)) {
         return;
     }
 

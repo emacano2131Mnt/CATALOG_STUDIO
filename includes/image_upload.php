@@ -75,3 +75,98 @@ function store_uploaded_image($file): array
 
     return ['name' => null, 'error' => 'No fue posible generar un nombre único para la fotografía. Inténtalo de nuevo.'];
 }
+
+function is_safe_image_name($name): bool
+{
+    return is_string($name)
+        && preg_match('/\A(?:[a-f0-9]{24}|[a-f0-9]{32})\.(?:jpg|jpeg|png|webp)\z/i', $name) === 1;
+}
+
+function stored_image_path($name): ?string
+{
+    if (!is_safe_image_name($name)) {
+        return null;
+    }
+
+    $directory = realpath(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'uploads');
+    if ($directory === false) {
+        return null;
+    }
+
+    $path = realpath($directory . DIRECTORY_SEPARATOR . $name);
+    if ($path === false || !is_file($path)) {
+        return null;
+    }
+
+    $prefix = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    if (stripos($path, $prefix) !== 0) {
+        return null;
+    }
+
+    return $path;
+}
+
+function product_image_url($name): ?string
+{
+    if (stored_image_path($name) === null) {
+        return null;
+    }
+
+    return 'uploads/' . rawurlencode($name);
+}
+
+function product_image_data_uri($name): ?string
+{
+    $path = stored_image_path($name);
+    if ($path === null || !class_exists('finfo')) {
+        return null;
+    }
+
+    $size = filesize($path);
+    if ($size === false || $size > 3 * 1024 * 1024) {
+        return null;
+    }
+
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($path);
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        return null;
+    }
+
+    $contents = file_get_contents($path);
+    if ($contents === false) {
+        return null;
+    }
+
+    return 'data:' . $mime . ';base64,' . base64_encode($contents);
+}
+
+function delete_image_if_unreferenced(PDO $pdo, $name): ?string
+{
+    if ($name === null || $name === '') {
+        return null;
+    }
+    if (!is_safe_image_name($name)) {
+        return 'No se pudo verificar la ruta de la fotografía anterior; se conservó por seguridad.';
+    }
+
+    $path = stored_image_path($name);
+    if ($path === null) {
+        return null;
+    }
+
+    try {
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM products WHERE image = ?');
+        $statement->execute([$name]);
+        if ((int)$statement->fetchColumn() > 0) {
+            return null;
+        }
+    } catch (PDOException $e) {
+        return 'No se pudieron comprobar las referencias de la fotografía; el archivo se conservó.';
+    }
+
+    if (!@unlink($path)) {
+        return 'La operación en la base de datos se completó, pero no se pudo eliminar el archivo de fotografía sin referencias.';
+    }
+
+    return null;
+}

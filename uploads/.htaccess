@@ -1,0 +1,15 @@
+Options -Indexes -ExecCGI
+
+# Only application-generated image names may be served from this directory.
+<FilesMatch "^(?![a-f0-9]{24,32}\.(jpg|jpeg|png|webp)$).*$">
+    Require all denied
+</FilesMatch>
+
+# Serve allowed image files as static content, never through an inherited script handler.
+<FilesMatch "^[a-f0-9]{24,32}\.(jpg|jpeg|png|webp)$">
+    SetHandler default-handler
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/includes/image_upload.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: catalogs.php');
@@ -14,16 +15,41 @@ if ($id === null) {
     reject_request('El identificador del catálogo no es válido.');
 }
 
-$statement = $pdo->prepare('DELETE FROM catalogs WHERE id = ?');
 try {
+    $pdo->beginTransaction();
+    $statement = $pdo->prepare('SELECT image FROM products WHERE catalog_id = ? FOR UPDATE');
     $statement->execute([$id]);
-    if ($statement->rowCount() === 1) {
-        flash_set('success', 'El catálogo y sus productos asociados se eliminaron correctamente.');
-    } else {
+    $productImages = $statement->fetchAll(PDO::FETCH_COLUMN);
+
+    $statement = $pdo->prepare('DELETE FROM catalogs WHERE id = ?');
+    $statement->execute([$id]);
+    if ($statement->rowCount() !== 1) {
+        $pdo->rollBack();
         flash_set('error', 'El catálogo ya no existe o ya fue eliminado.');
+        header('Location: catalogs.php');
+        exit;
     }
+    $pdo->commit();
 } catch (PDOException $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     flash_set('error', 'No fue posible eliminar el catálogo. No se realizaron cambios.');
+    header('Location: catalogs.php');
+    exit;
+}
+
+$cleanupWarnings = [];
+foreach ($productImages as $image) {
+    $warning = delete_image_if_unreferenced($pdo, $image);
+    if ($warning !== null) {
+        $cleanupWarnings[] = $warning;
+    }
+}
+if ($cleanupWarnings) {
+    flash_set('warning', 'El catálogo y sus productos se eliminaron, pero algunas fotografías se conservaron: ' . implode(' ', array_unique($cleanupWarnings)));
+} else {
+    flash_set('success', 'El catálogo y sus productos asociados se eliminaron correctamente.');
 }
 header('Location: catalogs.php');
 exit;
