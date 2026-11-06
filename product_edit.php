@@ -1,5 +1,96 @@
 <?php
-require_once __DIR__.'/config/db.php';$id=(int)($_GET['id']??0);$s=$pdo->prepare("SELECT * FROM products WHERE id=?");$s->execute([$id]);$product=$s->fetch();if(!$product)exit('Producto no encontrado');
-$pageTitle='Editar producto';$selectedCatalog=(int)$product['catalog_id'];$catalogOptions=$pdo->query("SELECT id,name FROM catalogs ORDER BY name")->fetchAll();$categories=$pdo->query("SELECT id,name FROM categories ORDER BY name")->fetchAll();
-if($_SERVER['REQUEST_METHOD']==='POST'){$catalogId=(int)$_POST['catalog_id'];$image=$product['image'];if(!empty($_FILES['image']['name'])){$ext=strtolower(pathinfo($_FILES['image']['name'],PATHINFO_EXTENSION));if(in_array($ext,['jpg','jpeg','png','webp'])&&$_FILES['image']['size']<=3145728){$image=bin2hex(random_bytes(12)).'.'.$ext;move_uploaded_file($_FILES['image']['tmp_name'],__DIR__.'/uploads/'.$image);}}$s=$pdo->prepare("UPDATE products SET catalog_id=?,category_id=?,name=?,description=?,price=?,image=? WHERE id=?");$s->execute([$catalogId,($_POST['category_id']??'')?:null,trim($_POST['name']),trim($_POST['description']??''),(float)$_POST['price'],$image,$id]);header('Location: catalog_view.php?id='.$catalogId);exit;}
-require __DIR__.'/includes/header.php';require __DIR__.'/product_form.php';require __DIR__.'/includes/footer.php';
+require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/includes/image_upload.php';
+
+$id = positive_id($_GET['id'] ?? null);
+if ($id === null) {
+    reject_request('El identificador del producto no es válido.', 404);
+}
+
+$statement = $pdo->prepare('SELECT * FROM products WHERE id = ?');
+$statement->execute([$id]);
+$product = $statement->fetch();
+if (!$product) {
+    reject_request('No se encontró el producto solicitado.', 404);
+}
+
+$pageTitle = 'Editar producto';
+$selectedCatalog = (int)$product['catalog_id'];
+$catalogOptions = $pdo->query('SELECT id, name FROM catalogs ORDER BY name')->fetchAll();
+$categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
+$errors = [];
+$formData = $product;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $formData = array_merge($product, $_POST);
+    if (!csrf_is_valid($_POST['csrf_token'] ?? null)) {
+        $errors[] = 'La sesión del formulario venció o el token de seguridad no es válido. Recarga la página e inténtalo de nuevo.';
+    } else {
+        $catalogId = positive_id($_POST['catalog_id'] ?? null);
+        if ($catalogId === null) {
+            $errors[] = 'Selecciona un catálogo válido.';
+        } else {
+            $statement = $pdo->prepare('SELECT id FROM catalogs WHERE id = ?');
+            $statement->execute([$catalogId]);
+            if (!$statement->fetchColumn()) {
+                $errors[] = 'El catálogo seleccionado ya no existe. Elige otro catálogo.';
+            }
+        }
+
+        $categoryId = null;
+        $rawCategoryId = $_POST['category_id'] ?? '';
+        if (!is_string($rawCategoryId)) {
+            $errors[] = 'La categoría seleccionada no es válida.';
+        } elseif ($rawCategoryId !== '') {
+            $categoryId = positive_id($rawCategoryId);
+            if ($categoryId === null) {
+                $errors[] = 'Selecciona una categoría válida.';
+            } else {
+                $statement = $pdo->prepare('SELECT id FROM categories WHERE id = ?');
+                $statement->execute([$categoryId]);
+                if (!$statement->fetchColumn()) {
+                    $errors[] = 'La categoría seleccionada no existe. Elige otra categoría.';
+                }
+            }
+        }
+
+        $name = request_text($_POST, 'name', 'nombre del producto', 140, true, $errors);
+        $description = request_text($_POST, 'description', 'descripción', 5000, false, $errors);
+        $price = valid_price($_POST['price'] ?? null, $errors);
+        $formData = array_merge($product, compact('name', 'description'));
+        if (is_string($_POST['catalog_id'] ?? null)) {
+            $formData['catalog_id'] = $_POST['catalog_id'];
+        }
+        if (is_string($_POST['category_id'] ?? null)) {
+            $formData['category_id'] = $_POST['category_id'];
+        }
+        if (is_string($_POST['price'] ?? null)) {
+            $formData['price'] = $_POST['price'];
+        }
+
+        if (!$errors) {
+            $upload = store_uploaded_image($_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE]);
+            if ($upload['error'] !== null) {
+                $errors[] = $upload['error'];
+            } else {
+                $image = $upload['name'] ?? $product['image'];
+                try {
+                    $statement = $pdo->prepare('UPDATE products SET catalog_id = ?, category_id = ?, name = ?, description = ?, price = ?, image = ? WHERE id = ?');
+                    $statement->execute([$catalogId, $categoryId, $name, $description, $price, $image, $id]);
+                    header('Location: catalog_view.php?id=' . $catalogId);
+                    exit;
+                } catch (PDOException $e) {
+                    if ($upload['name'] !== null) {
+                        @unlink(__DIR__ . '/uploads/' . $upload['name']);
+                    }
+                    $errors[] = 'No fue posible actualizar el producto. Verifica los datos e inténtalo de nuevo.';
+                }
+            }
+        }
+    }
+}
+
+require __DIR__ . '/includes/header.php';
+render_form_errors($errors);
+require __DIR__ . '/product_form.php';
+require __DIR__ . '/includes/footer.php';

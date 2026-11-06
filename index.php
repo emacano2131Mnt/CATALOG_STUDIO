@@ -21,7 +21,7 @@ require __DIR__ . '/includes/header.php';
 <?php else: ?>
 <div class="catalog-grid">
 <?php foreach ($recent as $c): ?>
-  <article class="catalog-card"><div class="catalog-cover"><span class="cover-mark">CS</span><span class="cover-label">CATÁLOGO</span></div><div class="catalog-card-body"><div class="card-top"><span class="pill"><?= htmlspecialchars($c['category'] ?: 'General') ?></span><span class="muted"><?= (int)$c['product_count'] ?> productos</span></div><h3><?= htmlspecialchars($c['name']) ?></h3><p><?= htmlspecialchars($c['description'] ?: 'Sin descripción') ?></p><div class="card-actions"><a class="btn btn-light" href="catalog_view.php?id=<?= $c['id'] ?>">Abrir catálogo</a><a class="icon-link" title="Editar" href="catalog_edit.php?id=<?= $c['id'] ?>">✎</a></div></div></article>
+  <article class="catalog-card"><div class="catalog-cover"><span class="cover-mark">CS</span><span class="cover-label">CATÁLOGO</span></div><div class="catalog-card-body"><div class="card-top"><span class="pill"><?= h($c['category'] ?: 'General') ?></span><span class="muted"><?= (int)$c['product_count'] ?> productos</span></div><h3><?= h($c['name']) ?></h3><p><?= h($c['description'] ?: 'Sin descripción') ?></p><div class="card-actions"><a class="btn btn-light" href="catalog_view.php?id=<?= (int)$c['id'] ?>">Abrir catálogo</a><a class="icon-link" title="Editar" href="catalog_edit.php?id=<?= (int)$c['id'] ?>">✎</a></div></div></article>
 <?php endforeach; ?>
 </div>
 <?php endif; ?>
