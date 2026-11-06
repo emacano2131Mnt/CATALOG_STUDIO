@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $statement = $pdo->prepare('INSERT INTO products (catalog_id, category_id, name, description, price, image) VALUES (?, ?, ?, ?, ?, ?)');
                     $statement->execute([$catalogId, $categoryId, $name, $description, $price, $upload['name']]);
+                    flash_set('success', 'El producto se agregó correctamente al catálogo.');
                     header('Location: catalog_view.php?id=' . $catalogId);
                     exit;
                 } catch (PDOException $e) {

@@ -92,6 +92,25 @@ function render_form_errors(array $errors): void
     echo '</ul></div>';
 }
 
+function flash_set(string $type, string $message): void
+{
+    if (!in_array($type, ['success', 'error'], true)) {
+        $type = 'error';
+    }
+    $_SESSION['flash_message'] = ['type' => $type, 'message' => $message];
+}
+
+function render_flash_message(): void
+{
+    $flash = $_SESSION['flash_message'] ?? null;
+    unset($_SESSION['flash_message']);
+    if (!is_array($flash) || !in_array($flash['type'] ?? null, ['success', 'error'], true) || !is_string($flash['message'] ?? null)) {
+        return;
+    }
+
+    echo '<div class="flash-message flash-' . h($flash['type']) . '" role="status">' . h($flash['message']) . '</div>';
+}
+
 function reject_request(string $message, int $status = 400): void
 {
     http_response_code($status);

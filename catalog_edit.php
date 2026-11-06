@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $statement = $pdo->prepare('UPDATE catalogs SET name = ?, category = ?, description = ? WHERE id = ?');
                 $statement->execute([$name, $category, $description, $id]);
+                flash_set('success', 'Los cambios del catálogo se guardaron correctamente.');
                 header('Location: catalog_view.php?id=' . $id);
                 exit;
             } catch (PDOException $e) {

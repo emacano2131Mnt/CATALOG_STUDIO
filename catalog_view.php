@@ -1,7 +1,11 @@
 <?php
 require_once __DIR__.'/config/db.php';
-$id=(int)($_GET['id']??0);$s=$pdo->prepare("SELECT * FROM catalogs WHERE id=?");$s->execute([$id]);$catalog=$s->fetch();
-if(!$catalog){http_response_code(404);exit('Catálogo no encontrado');}
+$id = positive_id($_GET['id'] ?? null);
+if ($id === null) {
+    reject_request('El identificador del catálogo no es válido.', 404);
+}
+$s=$pdo->prepare("SELECT * FROM catalogs WHERE id=?");$s->execute([$id]);$catalog=$s->fetch();
+if(!$catalog){reject_request('No se encontró el catálogo solicitado.', 404);}
 $s=$pdo->prepare("SELECT p.*, cat.name category_name FROM products p LEFT JOIN categories cat ON cat.id=p.category_id WHERE p.catalog_id=? ORDER BY p.created_at DESC");$s->execute([$id]);$products=$s->fetchAll();
 $pageTitle=$catalog['name'];require __DIR__.'/includes/header.php';
 ?>

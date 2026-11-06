@@ -22,6 +22,15 @@ if ($catalogId === false) {
 }
 
 $statement = $pdo->prepare('DELETE FROM products WHERE id = ?');
-$statement->execute([$id]);
+try {
+    $statement->execute([$id]);
+    if ($statement->rowCount() === 1) {
+        flash_set('success', 'El producto se eliminó correctamente.');
+    } else {
+        flash_set('error', 'El producto ya no existe o ya fue eliminado.');
+    }
+} catch (PDOException $e) {
+    flash_set('error', 'No fue posible eliminar el producto. No se realizaron cambios.');
+}
 header('Location: catalog_view.php?id=' . (int)$catalogId);
 exit;

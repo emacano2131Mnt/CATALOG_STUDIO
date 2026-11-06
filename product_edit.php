@@ -77,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $statement = $pdo->prepare('UPDATE products SET catalog_id = ?, category_id = ?, name = ?, description = ?, price = ?, image = ? WHERE id = ?');
                     $statement->execute([$catalogId, $categoryId, $name, $description, $price, $image, $id]);
+                    flash_set('success', 'Los cambios del producto se guardaron correctamente.');
                     header('Location: catalog_view.php?id=' . $catalogId);
                     exit;
                 } catch (PDOException $e) {

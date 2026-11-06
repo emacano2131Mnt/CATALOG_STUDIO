@@ -24,3 +24,4 @@ $current = basename($_SERVER['PHP_SELF']);
 <main class="main-content">
 <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <?= h($pageTitle) ?></div><div class="topbar-right"><span class="status-dot"></span><span>Servidor local</span><div class="top-avatar">U</div></div></header>
 <div class="content-wrap">
+<?php render_flash_message(); ?>

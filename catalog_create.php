@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $statement = $pdo->prepare('INSERT INTO catalogs (name, category, description) VALUES (?, ?, ?)');
                 $statement->execute([$name, $category, $description]);
+                flash_set('success', 'El catálogo se creó correctamente.');
                 header('Location: catalog_view.php?id=' . $pdo->lastInsertId());
                 exit;
             } catch (PDOException $e) {

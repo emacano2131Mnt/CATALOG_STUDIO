@@ -15,6 +15,15 @@ if ($id === null) {
 }
 
 $statement = $pdo->prepare('DELETE FROM catalogs WHERE id = ?');
-$statement->execute([$id]);
+try {
+    $statement->execute([$id]);
+    if ($statement->rowCount() === 1) {
+        flash_set('success', 'El catálogo y sus productos asociados se eliminaron correctamente.');
+    } else {
+        flash_set('error', 'El catálogo ya no existe o ya fue eliminado.');
+    }
+} catch (PDOException $e) {
+    flash_set('error', 'No fue posible eliminar el catálogo. No se realizaron cambios.');
+}
 header('Location: catalogs.php');
 exit;
