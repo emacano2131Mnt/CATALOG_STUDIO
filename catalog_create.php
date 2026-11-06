@@ -31,5 +31,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require __DIR__ . '/includes/header.php';
 ?>
-<div class="page-heading"><div><span class="eyebrow">NUEVO PROYECTO</span><h1>Crear catálogo</h1><p>Configura la información inicial de tu nuevo catálogo.</p></div></div>
+<section class="page-heading"><div class="page-heading-copy"><span class="eyebrow">NUEVO PROYECTO</span><h1>Crear catálogo</h1><p>Configura la información inicial de tu nuevo catálogo.</p></div></section>
 <?php render_form_errors($errors); require __DIR__ . '/catalog_form.php'; require __DIR__ . '/includes/footer.php'; ?>

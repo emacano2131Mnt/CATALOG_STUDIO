@@ -116,6 +116,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 require __DIR__ . '/includes/header.php';
+?>
+<section class="page-heading">
+  <div class="page-heading-copy"><span class="eyebrow">INVENTARIO</span><h1>Editar producto</h1><p>Actualiza los datos de <?= h($product['name']) ?>.</p></div>
+</section>
+<?php
 render_form_errors($errors);
 require __DIR__ . '/product_form.php';
 require __DIR__ . '/includes/footer.php';
