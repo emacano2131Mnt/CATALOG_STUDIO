@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/catalog_design_store.php';
+require_once __DIR__ . '/includes/product_order_store.php';
 
-$catalogId = positive_id($_GET['id'] ?? null);
+$isSelectionPost = $_SERVER['REQUEST_METHOD'] === 'POST';
+$catalogId = positive_id($isSelectionPost ? ($_POST['id'] ?? null) : ($_GET['id'] ?? null));
 if ($catalogId === null) {
     reject_request('El identificador del catálogo no es válido.', 404);
 }
@@ -14,9 +16,39 @@ if (!$catalog) {
     reject_request('No se encontró el catálogo solicitado.', 404);
 }
 
-$statement = $pdo->prepare('SELECT p.id, p.name, p.description, p.price, p.image, cat.name AS category_name FROM products p LEFT JOIN categories cat ON cat.id = p.category_id WHERE p.catalog_id = ? ORDER BY CASE WHEN cat.name IS NULL THEN 1 ELSE 0 END, cat.name, p.name');
-$statement->execute([$catalogId]);
-$products = $statement->fetchAll();
+if ($isSelectionPost && !csrf_is_valid($_POST['csrf_token'] ?? null)) {
+    reject_request('La sesión venció o el token CSRF no es válido. Recarga el catálogo e inténtalo de nuevo.', 403);
+}
+
+$selection = null;
+if ($isSelectionPost) {
+    if (($_POST['selection'] ?? null) !== 'selected' || !is_array($_POST['product_ids'] ?? null)) {
+        reject_request('Selecciona al menos un producto para generar este PDF.');
+    }
+    $selection = [];
+    foreach ($_POST['product_ids'] as $rawId) {
+        $productId = positive_id($rawId);
+        if ($productId === null || in_array($productId, $selection, true)) {
+            reject_request('La selección de productos contiene identificadores no válidos.');
+        }
+        $selection[] = $productId;
+    }
+    if (!$selection || count($selection) > 5000) reject_request('Selecciona entre 1 y 5000 productos para el PDF.');
+
+    $placeholders = implode(',', array_fill(0, count($selection), '?'));
+    $statement = $pdo->prepare('SELECT p.id, p.name, p.description, p.price, p.image, cat.name AS category_name FROM products p LEFT JOIN categories cat ON cat.id = p.category_id WHERE p.catalog_id = ? AND p.id IN (' . $placeholders . ')');
+    $statement->execute(array_merge([$catalogId], $selection));
+    $products = $statement->fetchAll();
+    if (count($products) !== count($selection)) {
+        reject_request('Uno o más productos seleccionados no pertenecen al catálogo solicitado.', 403);
+    }
+} else {
+    $statement = $pdo->prepare('SELECT p.id, p.name, p.description, p.price, p.image, cat.name AS category_name FROM products p LEFT JOIN categories cat ON cat.id = p.category_id WHERE p.catalog_id = ?');
+    $statement->execute([$catalogId]);
+    $products = $statement->fetchAll();
+    if (!$products) $products = [];
+}
+$products = catalog_product_order_apply($products, $catalogId);
 $design = catalog_design_load($catalogId, $catalog);
 $generatedAt = new DateTimeImmutable('now', new DateTimeZone('America/Bogota'));
 $safeCatalogName = h($catalog['name']);
@@ -242,7 +274,7 @@ try {
     $dompdf->loadHtml($html, 'UTF-8');
     $dompdf->setPaper($design['page_size'], $design['page_orientation']);
     $dompdf->render();
-    $download = ($_GET['download'] ?? null) === '1';
+    $download = ($_GET['download'] ?? $_POST['download'] ?? null) === '1';
     $dompdf->stream('catalogo-' . $catalogId . '.pdf', ['Attachment' => $download]);
 } catch (Throwable $e) {
     error_log('Catalog Studio could not render catalog PDF (catalog id ' . $catalogId . ').');

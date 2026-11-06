@@ -10,6 +10,8 @@ Thumbs.db
 /uploads/*
 /storage/catalog_designs/catalog-*.php
 /storage/catalog_designs/catalog-*.lock
+/storage/product_orders/catalog-*.php
+/storage/product_orders/catalog-*.lock
 !/uploads/.gitkeep
 !/uploads/.htaccess
 !/uploads/index.php

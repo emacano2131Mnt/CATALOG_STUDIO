@@ -63,7 +63,32 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   bindSearch('catalogSearch', '#catalogGrid .searchable', 'catalogSearchEmpty');
-  bindSearch('productSearch', '.product-row', 'productSearchEmpty');
+  const bindProductFilters = () => {
+    const search = document.getElementById('productSearch');
+    const catalog = document.getElementById('productCatalogFilter');
+    const category = document.getElementById('productCategoryFilter');
+    if (!search || !catalog || !category) return;
+    const rows = [...document.querySelectorAll('.product-row')];
+    const empty = document.getElementById('productSearchEmpty');
+    const update = () => {
+      const term = search.value.trim().toLocaleLowerCase('es');
+      const catalogId = catalog.value;
+      const categoryId = category.value;
+      let visible = 0;
+      rows.forEach((row) => {
+        const matches = (row.dataset.productName || '').includes(term)
+          && (!catalogId || row.dataset.catalogId === catalogId)
+          && (!categoryId || row.dataset.categoryId === categoryId);
+        row.hidden = !matches;
+        if (matches) visible += 1;
+      });
+      if (empty) empty.hidden = !(term || catalogId || categoryId) || visible > 0;
+    };
+    search.addEventListener('input', update);
+    catalog.addEventListener('change', update);
+    category.addEventListener('change', update);
+  };
+  bindProductFilters();
 
   document.querySelectorAll('.form-panel').forEach((form) => {
     form.addEventListener('submit', () => {

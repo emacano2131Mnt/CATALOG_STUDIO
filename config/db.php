@@ -17,6 +17,7 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (PDOException $e) {
     http_response_code(500);
-    exit('No fue posible conectar con MySQL. Verifica que Laragon esté iniciado y que hayas importado database.sql. Detalle: ' . h($e->getMessage()));
+    error_log('Catalog Studio MySQL connection failed: ' . $e->getMessage());
+    exit('No fue posible conectar con MySQL. Verifica que Laragon esté iniciado y que hayas importado database.sql.');
 }
 if (session_status() === PHP_SESSION_NONE) session_start();

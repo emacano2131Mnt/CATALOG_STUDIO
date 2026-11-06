@@ -41,6 +41,10 @@ require __DIR__ . '/includes/header.php';
             <a class="btn btn-light" href="catalog_view.php?id=<?= (int)$catalog['id'] ?>">Ver catálogo</a>
             <a class="icon-link" title="Personalizar diseño" aria-label="Personalizar diseño" href="catalog_designer.php?id=<?= (int)$catalog['id'] ?>">✦</a>
             <a class="icon-link" title="Ver PDF" aria-label="Ver PDF" href="export_pdf.php?id=<?= (int)$catalog['id'] ?>" target="_blank" rel="noopener">PDF</a>
+            <form method="post" action="catalog_duplicate.php" onsubmit="return confirm('¿Crear una copia de este catálogo y sus productos?');">
+              <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$catalog['id'] ?>">
+              <button class="icon-link" type="submit" title="Duplicar catálogo" aria-label="Duplicar catálogo">⧉</button>
+            </form>
             <a class="icon-link" title="Editar catálogo" aria-label="Editar catálogo" href="catalog_edit.php?id=<?= (int)$catalog['id'] ?>">✎</a>
             <form method="post" action="catalog_delete.php" onsubmit="return confirm('¿Eliminar este catálogo y sus productos? Esta acción no se puede deshacer.');">
               <?= csrf_field() ?>

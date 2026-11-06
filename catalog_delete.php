@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/image_upload.php';
 require_once __DIR__ . '/includes/catalog_design_store.php';
+require_once __DIR__ . '/includes/product_order_store.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: catalogs.php');
@@ -44,6 +45,10 @@ $cleanupWarnings = [];
 $designWarning = catalog_design_delete($pdo, $id);
 if ($designWarning !== null) {
     $cleanupWarnings[] = $designWarning;
+}
+$orderWarning = catalog_product_order_delete($id);
+if ($orderWarning !== null) {
+    $cleanupWarnings[] = $orderWarning;
 }
 foreach ($productImages as $image) {
     $warning = delete_image_if_unreferenced($pdo, $image);

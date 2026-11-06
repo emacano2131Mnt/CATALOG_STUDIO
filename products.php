@@ -4,6 +4,8 @@ require_once __DIR__ . '/includes/image_upload.php';
 
 $pageTitle = 'Productos';
 $products = $pdo->query('SELECT p.*, c.name AS catalog_name, cat.name AS category_name FROM products p JOIN catalogs c ON c.id = p.catalog_id LEFT JOIN categories cat ON cat.id = p.category_id ORDER BY p.created_at DESC')->fetchAll();
+$catalogFilters = $pdo->query('SELECT id, name FROM catalogs ORDER BY name')->fetchAll();
+$categoryFilters = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
 
 require __DIR__ . '/includes/header.php';
 ?>
@@ -15,8 +17,16 @@ require __DIR__ . '/includes/header.php';
 <div class="toolbar">
   <label class="search-box" for="productSearch">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>
-    <input id="productSearch" type="search" placeholder="Buscar producto, catálogo o categoría…" autocomplete="off">
+    <input id="productSearch" type="search" placeholder="Buscar por nombre de producto…" autocomplete="off">
   </label>
+  <div class="product-filters">
+    <label class="filter-control">Catálogo
+      <select id="productCatalogFilter"><option value="">Todos los catálogos</option><?php foreach ($catalogFilters as $filter): ?><option value="<?= (int)$filter['id'] ?>"><?= h($filter['name']) ?></option><?php endforeach; ?></select>
+    </label>
+    <label class="filter-control">Categoría
+      <select id="productCategoryFilter"><option value="">Todas las categorías</option><?php foreach ($categoryFilters as $filter): ?><option value="<?= (int)$filter['id'] ?>"><?= h($filter['name']) ?></option><?php endforeach; ?></select>
+    </label>
+  </div>
   <span class="muted"><?= count($products) ?> producto(s)</span>
 </div>
 <p class="empty-search" id="productSearchEmpty" role="status" hidden>No hay productos que coincidan con la búsqueda.</p>
@@ -36,7 +46,7 @@ require __DIR__ . '/includes/header.php';
         <tbody>
         <?php foreach ($products as $product): ?>
           <?php $imageUrl = product_image_url($product['image']); ?>
-          <tr class="product-row">
+          <tr class="product-row" data-product-name="<?= h(mb_strtolower($product['name'], 'UTF-8')) ?>" data-catalog-id="<?= (int)$product['catalog_id'] ?>" data-category-id="<?= $product['category_id'] === null ? '' : (int)$product['category_id'] ?>">
             <td><div class="product-listing-name"><div class="product-thumb"><?php if ($imageUrl !== null): ?><img src="<?= h($imageUrl) ?>" alt=""><?php else: ?><span class="product-thumb-placeholder" aria-label="Sin fotografía">◇</span><?php endif; ?></div><strong><?= h($product['name']) ?></strong></div></td>
             <td><a class="text-link" href="catalog_view.php?id=<?= (int)$product['catalog_id'] ?>"><?= h($product['catalog_name']) ?></a></td>
             <td><?= h($product['category_name'] ?: '—') ?></td>
